@@ -13,8 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -74,9 +73,33 @@ public class UserControllerTest {
                 .andExpect(jsonPath("id").value(user.getId()))
                 .andExpect(jsonPath("email").value(user.getEmail()))
                 .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.create-user").exists())
                 .andExpect(jsonPath("_links.update-user").exists())
                 .andExpect(jsonPath("_links.delete-user").exists())
         ;
 
+    }
+
+    @Test
+    public void updateTest() throws Exception {
+        //given
+        User user = userService.insertUser(userDto);
+
+        userDto.setName("수정");
+        userDto.setEmail("update@email.com");
+
+        //when & then
+        mockMvc.perform(put("/api/users/{id}", user.getId())
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .content(objectMapper.writeValueAsString(userDto))
+                )
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").value(userDto.getName()))
+                .andExpect(jsonPath("email").value(userDto.getEmail()))
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.create-user").exists())
+                .andExpect(jsonPath("_links.get-user").exists())
+                .andExpect(jsonPath("_links.delete-user").exists());
     }
 }

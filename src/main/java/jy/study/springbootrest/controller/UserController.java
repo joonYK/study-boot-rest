@@ -42,4 +42,16 @@ public class UserController {
         return entityModel;
     }
 
+    @PutMapping("/{id}")
+    public EntityModel<User> updateUser(@PathVariable Integer id, @RequestBody UserDto userDto) {
+        User user = userService.updateUser(id, userDto);
+
+        EntityModel<User> entityModel = EntityModel.of(user);
+        entityModel.add(linkTo(UserController.class).slash(user.getId()).withSelfRel());
+        entityModel.add(linkTo(UserController.class).withRel("create-user"));
+        entityModel.add(linkTo(UserController.class).slash(user.getId()).withRel("get-user"));
+        entityModel.add(linkTo(UserController.class).slash(user.getId()).withRel("delete-user"));
+
+        return entityModel;
+    }
 }

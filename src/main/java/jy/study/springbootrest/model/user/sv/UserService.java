@@ -4,6 +4,7 @@ import jy.study.springbootrest.model.user.dto.UserDto;
 import jy.study.springbootrest.model.user.entity.User;
 import jy.study.springbootrest.model.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -26,5 +27,11 @@ public class UserService {
     public User getUser(Integer id) {
         Optional<User> optional = userRepository.findById(id);
         return optional.orElse(null);
+    }
+
+    public User updateUser(Integer id, UserDto userDto) {
+        User user = getUser(id);
+        BeanUtils.copyProperties(userDto, user, "id");
+        return userRepository.save(user);
     }
 }
