@@ -34,4 +34,8 @@ public class UserService {
         BeanUtils.copyProperties(userDto, user, "id");
         return userRepository.save(user);
     }
+
+    public void deleteUser(Integer id) {
+        userRepository.deleteById(id);
+    }
 }

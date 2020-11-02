@@ -102,4 +102,18 @@ public class UserControllerTest {
                 .andExpect(jsonPath("_links.get-user").exists())
                 .andExpect(jsonPath("_links.delete-user").exists());
     }
+
+    @Test
+    public void deleteTest() throws Exception {
+        //given
+        User user = userService.insertUser(userDto);
+
+        //when & then
+        mockMvc.perform(delete("/api/users/{id}", user.getId()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("message").value("delete success"))
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.create-user").exists());
+    }
 }

@@ -1,5 +1,6 @@
 package jy.study.springbootrest.controller;
 
+import jy.study.springbootrest.controller.data.ApiResult;
 import jy.study.springbootrest.model.user.dto.UserDto;
 import jy.study.springbootrest.model.user.entity.User;
 import jy.study.springbootrest.model.user.sv.UserService;
@@ -17,9 +18,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public EntityModel<User> createUser(
-            @RequestBody UserDto userDto
-    ) {
+    public EntityModel<User> createUser(@RequestBody UserDto userDto) {
         User user = userService.insertUser(userDto);
 
         EntityModel<User> entityModel = EntityModel.of(user);
@@ -51,6 +50,17 @@ public class UserController {
         entityModel.add(linkTo(UserController.class).withRel("create-user"));
         entityModel.add(linkTo(UserController.class).slash(user.getId()).withRel("get-user"));
         entityModel.add(linkTo(UserController.class).slash(user.getId()).withRel("delete-user"));
+
+        return entityModel;
+    }
+
+    @DeleteMapping("/{id}")
+    public EntityModel<ApiResult> deleteUser(@PathVariable Integer id) {
+        userService.deleteUser(id);
+
+        EntityModel<ApiResult> entityModel = EntityModel.of(new ApiResult(true, "delete success"));
+        entityModel.add(linkTo(UserController.class).slash(id).withSelfRel());
+        entityModel.add(linkTo(UserController.class).withRel("create-user"));
 
         return entityModel;
     }
