@@ -1,8 +1,10 @@
 package jy.study.springbootrest.controller;
 
 import jy.study.springbootrest.controller.data.ApiResult;
+import jy.study.springbootrest.controller.data.ApiResultData;
 import jy.study.springbootrest.model.user.dto.UserDto;
 import jy.study.springbootrest.model.user.entity.User;
+import jy.study.springbootrest.model.user.exception.UserException;
 import jy.study.springbootrest.model.user.sv.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.hateoas.EntityModel;
@@ -18,12 +20,22 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public EntityModel<User> createUser(@RequestBody UserDto userDto) {
-        User user = userService.insertUser(userDto);
+    public EntityModel<ApiResult> createUser(@RequestBody UserDto userDto) throws IllegalArgumentException {
+        ApiResult apiResult = null;
+        User user = null;
 
-        EntityModel<User> entityModel = EntityModel.of(user);
+        try {
+            user = userService.insertUser(userDto);
+            apiResult = new ApiResultData<>(user);
+        } catch (UserException userException) {
+            apiResult = new ApiResult(false, userException.errMsg());
+        }
+
+        EntityModel<ApiResult> entityModel = EntityModel.of(apiResult);
         entityModel.add(linkTo(UserController.class).withSelfRel());
-        entityModel.add(linkTo(UserController.class).slash(user.getId()).withRel("get-user"));
+
+        if(apiResult.isSuccess())
+            entityModel.add(linkTo(UserController.class).slash(user.getId()).withRel("get-user"));
 
         return entityModel;
     }

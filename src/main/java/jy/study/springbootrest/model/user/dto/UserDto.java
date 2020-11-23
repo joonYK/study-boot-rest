@@ -13,4 +13,11 @@ public class UserDto {
 
     private String email;
 
+    public void requiredValueCheck() throws IllegalArgumentException {
+        if(name == null || "".equals(name))
+            throw new IllegalArgumentException("이름이 없습니다.");
+        else if(email == null || "".equals(email))
+            throw new IllegalArgumentException("이메일이 없습니다.");
+    }
+
 }

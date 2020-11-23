@@ -3,15 +3,20 @@ package jy.study.springbootrest.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jy.study.springbootrest.model.user.dto.UserDto;
 import jy.study.springbootrest.model.user.entity.User;
+import jy.study.springbootrest.model.user.exception.UserException;
 import jy.study.springbootrest.model.user.repository.UserRepository;
 import jy.study.springbootrest.model.user.sv.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.filter.CharacterEncodingFilter;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -19,11 +24,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 public class UserControllerTest {
 
-    @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    WebApplicationContext ctx;
 
     @Autowired
     UserRepository userRepository;
@@ -38,6 +44,11 @@ public class UserControllerTest {
 
     @BeforeEach
     public void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(ctx)
+                .addFilter(new CharacterEncodingFilter(StandardCharsets.UTF_8.name(), true))
+                .alwaysDo(print())
+                .build();
+
         userDto = UserDto.builder()
                 .name("김준엽")
                 .email("test@email.com")
@@ -54,7 +65,7 @@ public class UserControllerTest {
                 )
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("data.id").exists())
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.get-user").exists())
         ;
@@ -116,4 +127,33 @@ public class UserControllerTest {
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.create-user").exists());
     }
+
+    @Test
+    public void duplicatedUserCreateTest() throws Exception {
+        //given
+        User user = userService.insertUser(userDto);
+
+        //when
+        mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON_VALUE)
+            .content(objectMapper.writeValueAsString(userDto)))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("success").value(false))
+                .andExpect(jsonPath("message").value(UserException.UserExceptionType.DUPLICATION.getMsg()));
+    }
+
+    @Test
+    public void userDtoValueNotSet() throws Exception {
+        //given
+        userDto.setName(null);
+
+        mockMvc.perform(post("/api/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(userDto)))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("errorMessage").exists());
+    }
+
 }

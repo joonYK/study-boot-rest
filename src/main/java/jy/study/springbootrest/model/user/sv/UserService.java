@@ -2,6 +2,7 @@ package jy.study.springbootrest.model.user.sv;
 
 import jy.study.springbootrest.model.user.dto.UserDto;
 import jy.study.springbootrest.model.user.entity.User;
+import jy.study.springbootrest.model.user.exception.UserException;
 import jy.study.springbootrest.model.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -15,7 +16,13 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public User insertUser(UserDto userDto) {
+    public User insertUser(UserDto userDto) throws IllegalArgumentException, UserException {
+        userDto.requiredValueCheck();
+
+        Optional<User> optional = userRepository.findByEmail(userDto.getEmail());
+        if(optional.isPresent())
+            throw new UserException(UserException.UserExceptionType.DUPLICATION);
+
         User user = User.builder()
                 .name(userDto.getName())
                 .email(userDto.getEmail())
